@@ -1,0 +1,38 @@
+name: ts-ci
+
+on:
+  push:
+    paths:
+      - "ts/**"
+      - ".github/workflows/ts-ci.yaml"
+  pull_request:
+    paths:
+      - "ts/**"
+      - ".github/workflows/ts-ci.yaml"
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        bun: ["latest"]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: ts
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ matrix.bun }}
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Typecheck
+        run: bun run typecheck
+      - name: Lint
+        run: bun run lint
+      - name: Test
+        run: bun test

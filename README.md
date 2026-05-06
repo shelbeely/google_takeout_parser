@@ -6,6 +6,15 @@ Parses data out of your [Google Takeout](https://takeout.google.com/) (History, 
 - caches individual takeout results behind [`cachew`](https://github.com/karlicoss/cachew)
 - merges multiple takeouts into unique events
 
+> **TypeScript / Bun port:** A Bun + TypeScript port lives under [`ts/`](./ts/) with
+> agent-native exporters for [OpenClaw](https://github.com/openclaw/openclaw)
+> (`--format openclaw` produces a SQLite + FTS5 + Markdown digest skill bundle)
+> and [OpenViking](https://github.com/volcengine/OpenViking) (`--format
+> openviking` produces an L0/L1/L2 filesystem-paradigm Context Database). The
+> TS port is recommended for new agent integrations; the Python package
+> remains the source of truth for legacy HTML formats. See
+> [`ts/README.md`](./ts/README.md) for installation and usage.
+
 ---
 
 - [Installation](#installation)
