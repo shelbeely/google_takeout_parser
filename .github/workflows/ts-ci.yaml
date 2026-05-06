@@ -36,3 +36,13 @@ jobs:
         run: bun run lint
       - name: Test
         run: bun test
+      - name: Build standalone binary
+        run: bun run build:binary
+      - name: Smoke-test binary
+        run: ./dist/google-takeout-parser --help || ./dist/google-takeout-parser cache path
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: google-takeout-parser-${{ matrix.os }}
+          path: ts/dist/google-takeout-parser
+          if-no-files-found: error

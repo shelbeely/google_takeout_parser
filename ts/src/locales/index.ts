@@ -9,6 +9,7 @@ import { parseYoutubeCommentsCsv, parseYoutubeLiveChatsCsv } from "../parsers/cs
  *   file isn't an unhandled-file warning case)
  * - First match wins; entries are evaluated in order.
  */
+import { parseHtmlActivity, parseHtmlComments } from "../parsers/html/index.ts";
 import {
   parseAppInstalls,
   parseChromeHistory,
@@ -30,10 +31,10 @@ export function compileHandlerMap(entries: Array<[string, HandlerFunction | null
   return entries.map(([pat, h]) => [new RegExp(`^${pat}`), h]);
 }
 
-// HTML parsers are not yet ported. Files matching these patterns will produce
-// an "unhandled" warning during dispatch — handled gracefully but logged so
-// users with HTML-format takeouts know they need the legacy Python tool.
-const NOT_YET_IMPLEMENTED_HTML: HandlerFunction | null = null;
+// HTML parsers — ported via `node-html-parser`. Live-chat HTML files use the
+// same shape as comment HTML and reuse `parseHtmlComments`. (Note: in the
+// Python codebase, live-chat HTML and comment HTML share the same parser path
+// because both produce `YoutubeComment` events.)
 
 // ---------------------------------------------------------------------------
 // English locale (port of locales/en.py)
@@ -55,14 +56,13 @@ export const EN: HandlerMap = compileHandlerMap([
   ],
   ["Location History( \\(Timeline\\))?/", null],
 
-  // Legacy HTML — not yet ported in TypeScript port (deferred per phase 4).
-  ["YouTube( and YouTube Music)?/history/.*?\\.html", NOT_YET_IMPLEMENTED_HTML],
+  ["YouTube( and YouTube Music)?/history/.*?\\.html", parseHtmlActivity],
   ["YouTube( and YouTube Music)?/history/.*?\\.json", parseJsonActivity],
 
-  ["YouTube( and YouTube Music)?/my-comments/.*?\\.html", NOT_YET_IMPLEMENTED_HTML],
+  ["YouTube( and YouTube Music)?/my-comments/.*?\\.html", parseHtmlComments],
   ["YouTube( and YouTube Music)?/comments/comments\\.csv", parseYoutubeCommentsCsv],
   ["YouTube( and YouTube Music)?/live\\s*chats/live\\s*chats\\.csv", parseYoutubeLiveChatsCsv],
-  ["YouTube( and YouTube Music)?/my-live-chat-messages/.*?\\.html", NOT_YET_IMPLEMENTED_HTML],
+  ["YouTube( and YouTube Music)?/my-live-chat-messages/.*?\\.html", parseHtmlComments],
   ["YouTube( and YouTube Music)?/playlists/likes\\.json", parseLikes],
   ["YouTube( and YouTube Music)?/playlists/", null],
   ["YouTube( and YouTube Music)?/subscriptions", null],
@@ -73,7 +73,7 @@ export const EN: HandlerMap = compileHandlerMap([
   ["My Activity/Assistant/.*\\.mp3", null],
   ["My Activity/Voice and Audio/.*\\.mp3", null],
   ["My Activity/Takeout", null],
-  ["My Activity/.*?My\\s*Activity(-\\d+)?\\.html", NOT_YET_IMPLEMENTED_HTML],
+  ["My Activity/.*?My\\s*Activity(-\\d+)?\\.html", parseHtmlActivity],
   ["My Activity/.*?My\\s*Activity\\.json", parseJsonActivity],
 
   ["Access Log Activity", null],
@@ -137,13 +137,13 @@ export const DE: HandlerMap = compileHandlerMap([
     parseSemanticLocationHistory,
   ],
   ["Location History( \\(Timeline\\))?/", null],
-  ["YouTube( und YouTube Music)?/Verlauf/.*?\\.html", NOT_YET_IMPLEMENTED_HTML],
+  ["YouTube( und YouTube Music)?/Verlauf/.*?\\.html", parseHtmlActivity],
   ["YouTube( und YouTube Music)?/Verlauf/.*?\\.json", parseJsonActivity],
-  ["YouTube( und YouTube Music)?/Meine Kommentare/.*?\\.html", NOT_YET_IMPLEMENTED_HTML],
-  ["YouTube( und YouTube Music)?/meine-live-chat-nachrichten/.*?\\.html", NOT_YET_IMPLEMENTED_HTML],
+  ["YouTube( und YouTube Music)?/Meine Kommentare/.*?\\.html", parseHtmlComments],
+  ["YouTube( und YouTube Music)?/meine-live-chat-nachrichten/.*?\\.html", parseHtmlComments],
   ["YouTube( und YouTube Music)?/Playlists/Liked videos\\.json", parseLikes],
   ["YouTube( und Youtube Music)?/.*", null],
-  ["Meine Aktivit\u00e4ten/.*?Meine\\s*Aktivit\u00e4ten\\.html", null],
+  ["Meine Aktivit\u00e4ten/.*?Meine\\s*Aktivit\u00e4ten\\.html", parseHtmlActivity],
   ["Meine Aktivit\u00e4ten/.*?Meine\\s*Aktivit\u00e4ten\\.json", parseJsonActivity],
   ["Google Fit", null],
   ["Google Play-Spieldienste/", null],

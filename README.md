@@ -11,9 +11,9 @@ Parses data out of your [Google Takeout](https://takeout.google.com/) (History, 
 > (`--format openclaw` produces a SQLite + FTS5 + Markdown digest skill bundle)
 > and [OpenViking](https://github.com/volcengine/OpenViking) (`--format
 > openviking` produces an L0/L1/L2 filesystem-paradigm Context Database). The
-> TS port is recommended for new agent integrations; the Python package
-> remains the source of truth for legacy HTML formats. See
-> [`ts/README.md`](./ts/README.md) for installation and usage.
+> port covers JSON, CSV **and the legacy HTML formats**, ships as a standalone
+> `bun build --compile` binary, and is recommended for new agent integrations.
+> See [`ts/README.md`](./ts/README.md) for installation and usage.
 
 ---
 

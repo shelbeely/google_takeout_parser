@@ -5,11 +5,11 @@ on top of [Bun][bun]. Output formats are designed for AI-agent consumption:
 the parser pre-bakes everything to disk so the agent never waits on parsing at
 query time.
 
-This is a port of the original Python package one directory up. It currently
-covers the JSON and CSV parsers (Activity, Chrome history, Play installs,
+This is a port of the original Python package one directory up. It covers the
+JSON, CSV and legacy HTML parsers (Activity, Chrome history, Play installs,
 Location history, Semantic Location history, Keep notes, YouTube likes,
-YouTube comments CSV, YouTube live-chats CSV) plus EN and DE locales. The
-legacy HTML parsers have **not** yet been ported (see "Status" below).
+YouTube comments CSV/HTML, YouTube live-chats CSV/HTML, My Activity HTML)
+across EN and DE locales. See the "Status" table below for parity details.
 
 ## Install
 
@@ -170,7 +170,8 @@ src/
 ├── util/          httpAllowlist (rewrite Google http:// -> https://)
 ├── parsers/
 │   ├── json/      Activity, Likes, Play installs, Location, Semantic Location, Chrome, Keep
-│   └── csv/       YouTube comments, YouTube live chats, comment text reconstruction
+│   ├── csv/       YouTube comments, YouTube live chats, comment text reconstruction
+│   └── html/      Legacy My Activity HTML, comment HTML, live-chat HTML (node-html-parser)
 ├── locales/       EN & DE handler maps + registerLocale()
 ├── dispatch/      Walks a Takeout dir, matches files, streams Result<Event>
 ├── merge/         Dedupes by event key across multiple takeouts
@@ -192,6 +193,7 @@ Every parser is an `AsyncIterable<Result<Event>>`. Errors surface as values
 | ------- | ------ |
 | JSON parsers (Activity, Chrome, Play, Location, Semantic, Keep, Likes) | ✅ |
 | CSV parsers (YouTube comments, live chats, content reconstruction) | ✅ |
+| HTML parsers (My Activity, YouTube comments, live-chat messages) | ✅ |
 | Locales: EN, DE | ✅ |
 | Path dispatch with `Result<T>` | ✅ |
 | Merge / dedup across takeouts | ✅ |
@@ -200,9 +202,16 @@ Every parser is an `AsyncIterable<Result<Event>>`. Errors surface as values
 | OpenViking exporter (L0/L1/L2 + manifest) | ✅ |
 | OpenClaw exporter (skill.json + by-date + FTS5 search + digests) | ✅ |
 | CLI: `parse`, `merge`, `cache`, multi-`--format` | ✅ |
-| **Legacy HTML parsers** (My Activity HTML, comment HTML, live-chat HTML) | ❌ Not ported. Use the Python package for HTML-only takeouts. |
-| Snapshot parity tests vs. Python NDJSON | Planned |
-| `bun build --compile` release pipeline | Planned (CI builds + tests today) |
+| `bun build --compile` standalone binary (CI artifact uploaded) | ✅ |
+| Property tests (`fast-check`) for merge | ✅ |
+| Snapshot parity tests vs. Python NDJSON | Planned (would need Python in CI) |
+
+**HTML parser notes.** The legacy My Activity HTML parser uses `node-html-parser`
+and supports the most common timezone abbreviations seen in Google exports
+(`UTC`, `GMT`, `BST`, `CET`, `CEST`, `MSK`, `IST`, `PST/PDT`, `MST/MDT`,
+`CST/CDT`, `EST/EDT`, plus AU/JP/NZ zones). Unknown abbreviations fall back to
+UTC with a best-effort warning — same behaviour the Python tool documents as
+"the best we can do" without an embedded pytz database.
 
 The OpenClaw skill schema isn't fully published yet; `skill.json` follows the
 documented shape (`name`, `version`, `description`, `runtime`, `resources`,
@@ -214,7 +223,7 @@ documented shape (`name`, `version`, `description`, `runtime`, `resources`,
 bun install
 bun run typecheck   # tsc --noEmit
 bun run lint        # biome check
-bun test            # 29 tests across 6 files
+bun test            # 48 tests across 8 files (incl. fast-check property tests)
 bun run build       # bundle to dist/
 ```
 
